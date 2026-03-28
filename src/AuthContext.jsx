@@ -13,7 +13,7 @@ const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
 // ── Add admin email addresses here ───────────────────────────────────────────
-const ADMIN_EMAILS = ["dharshan@gmail.com"];
+const ADMIN_EMAILS = ["dharshan2872006@gmail.com"];
 
 export function AuthProvider({ children }) {
   const [user,    setUser]    = useState(null);
