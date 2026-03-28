@@ -1,12 +1,8 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs 'NodeJS-20'
-    }
-
     environment {
-        DEPLOY_DIR = 'C:\\deploy\\course-registration'
+        DEPLOY_DIR = '/var/www/html/course-registration'
     }
 
     stages {
@@ -18,38 +14,42 @@ pipeline {
             }
         }
 
+        stage('Install Node') {
+            steps {
+                sh 'node -v'
+                sh 'npm -v'
+            }
+        }
+
         stage('Install Dependencies') {
             steps {
-                echo 'Installing npm packages...'
-                bat 'npm ci'
+                echo 'Installing packages...'
+                sh 'npm ci'
             }
         }
 
         stage('Build') {
             steps {
                 echo 'Building React app...'
-                bat 'npm run build'
-            }
-            post {
-                success { echo 'Build succeeded!' }
-                failure { echo 'Build failed!' }
+                sh 'npm run build'
             }
         }
 
         stage('Deploy') {
             steps {
-                echo 'Deploying...'
-                bat '''
-                    if not exist "%DEPLOY_DIR%" mkdir "%DEPLOY_DIR%"
-                    xcopy /E /Y /I dist\\* "%DEPLOY_DIR%\\"
+                echo 'Deploying to Nginx...'
+                sh '''
+                    rm -rf $DEPLOY_DIR/*
+                    cp -r dist/* $DEPLOY_DIR/
+                    echo "Deployed at $(date)" > $DEPLOY_DIR/deploy.log
                 '''
             }
         }
     }
 
     post {
-        success { echo 'App deployed successfully!' }
-        failure { echo 'Pipeline failed. Check console output.' }
+        success { echo 'App is live at http://20.204.247.210:8080 }
+        failure { echo 'Build failed! Check console output.' }
         always  { cleanWs() }
     }
 }
