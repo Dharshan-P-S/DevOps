@@ -48,7 +48,7 @@ pipeline {
     }
 
     post {
-        success { echo 'App is live at http://20.204.247.210:8080 }
+        success { echo 'App is live at http://20.204.247.210:8080' }
         failure { echo 'Build failed! Check console output.' }
         always  { cleanWs() }
     }
