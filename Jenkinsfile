@@ -5,6 +5,10 @@ pipeline {
         DEPLOY_DIR = '/var/www/html/course-registration'
     }
 
+    options {
+        timeout(time: 15, unit: 'MINUTES')
+    }
+
     stages {
 
         stage('Checkout') {
@@ -14,8 +18,9 @@ pipeline {
             }
         }
 
-        stage('Install Node') {
+        stage('Verify Environment') {
             steps {
+                echo 'Checking Node and npm versions...'
                 sh 'node -v'
                 sh 'npm -v'
             }
@@ -23,8 +28,8 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                echo 'Installing packages...'
-                sh 'npm ci'
+                echo 'Installing npm packages...'
+                sh 'npm install --prefer-offline'
             }
         }
 
@@ -37,19 +42,44 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                echo 'Deploying to Nginx...'
+                echo 'Deploying to Nginx directory...'
                 sh '''
+                    mkdir -p $DEPLOY_DIR
                     rm -rf $DEPLOY_DIR/*
                     cp -r dist/* $DEPLOY_DIR/
                     echo "Deployed at $(date)" > $DEPLOY_DIR/deploy.log
                 '''
             }
         }
+
+        stage('Set Permissions') {
+            steps {
+                echo 'Setting correct permissions...'
+                sh '''
+                    sudo chown -R www-data:www-data $DEPLOY_DIR
+                    sudo chmod -R 755 $DEPLOY_DIR
+                '''
+            }
+        }
+
+        stage('Reload Nginx') {
+            steps {
+                echo 'Reloading Nginx...'
+                sh 'sudo systemctl reload nginx'
+            }
+        }
     }
 
     post {
-        success { echo 'App is live at http://20.204.247.210:8080' }
-        failure { echo 'Build failed! Check console output.' }
-        always  { cleanWs() }
+        success {
+            echo '✅ App deployed successfully!'
+            echo '🌐 Access your app at: http://20.204.247.210'
+        }
+        failure {
+            echo '❌ Build failed! Check console output.'
+        }
+        always {
+            cleanWs()
+        }
     }
 }
