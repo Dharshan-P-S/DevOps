@@ -67,9 +67,19 @@ export function AuthProvider({ children }) {
   // Try popup first, fall back to redirect
   const loginWithGoogle = async () => {
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+
+      // ✅ IMPORTANT: process user immediately
+      await handleFirebaseUser(result.user);
+
+      return result.user;
     } catch (err) {
-      if (err.code === "auth/popup-blocked" || err.code === "auth/popup-closed-by-user") {
+      console.error("Popup error:", err.code, err.message);
+
+      if (
+        err.code === "auth/popup-blocked" ||
+        err.code === "auth/popup-closed-by-user"
+      ) {
         await signInWithRedirect(auth, provider);
       } else {
         throw err;
