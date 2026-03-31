@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         DEPLOY_DIR = '/var/www/html/course-registration'
+        NODE_OPTIONS = '--max-old-space-size=256'
     }
 
     options {
@@ -28,14 +29,17 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                echo 'Installing npm packages...'
-                sh 'npm install --prefer-offline'
+                echo 'Installing npm packages (optimized)...'
+                sh '''
+                    rm -rf node_modules package-lock.json
+                    npm ci --prefer-offline --no-audit --no-fund
+                '''
             }
         }
 
         stage('Build') {
             steps {
-                echo 'Building React app...'
+                echo 'Building React app (low memory)...'
                 sh 'npm run build'
             }
         }
