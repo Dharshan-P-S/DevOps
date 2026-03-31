@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         DEPLOY_DIR = '/var/www/html/course-registration'
-        NODE_OPTIONS = '--max-old-space-size=256'
     }
 
     options {
@@ -29,17 +28,14 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                echo 'Installing npm packages (optimized)...'
-                sh '''
-                    rm -rf node_modules package-lock.json
-                    npm ci --prefer-offline --no-audit --no-fund
-                '''
+                echo 'Installing npm packages...'
+                sh 'npm install --prefer-offline'
             }
         }
 
         stage('Build') {
             steps {
-                echo 'Building React app (low memory)...'
+                echo 'Building React app...'
                 sh 'npm run build'
             }
         }
@@ -48,10 +44,10 @@ pipeline {
             steps {
                 echo 'Deploying to Nginx directory...'
                 sh '''
-                    mkdir -p $DEPLOY_DIR
-                    rm -rf $DEPLOY_DIR/*
-                    cp -r dist/* $DEPLOY_DIR/
-                    echo "Deployed at $(date)" > $DEPLOY_DIR/deploy.log
+                mkdir -p $DEPLOY_DIR
+                rm -rf $DEPLOY_DIR/*
+                cp -r dist/* $DEPLOY_DIR/
+                echo "Deployed at $(date)" > $DEPLOY_DIR/deploy.log
                 '''
             }
         }
@@ -60,8 +56,8 @@ pipeline {
             steps {
                 echo 'Setting correct permissions...'
                 sh '''
-                    sudo chown -R www-data:www-data $DEPLOY_DIR
-                    sudo chmod -R 755 $DEPLOY_DIR
+                sudo chown -R www-data:www-data $DEPLOY_DIR
+                sudo chmod -R 755 $DEPLOY_DIR
                 '''
             }
         }
